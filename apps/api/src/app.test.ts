@@ -1,4 +1,4 @@
-import { ReportModel, Run, type EventBus, type RunEvent } from '@rm/db';
+import { EvalResultModel, ReportModel, Run, type EventBus, type RunEvent } from '@rm/db';
 import { EventEmitter } from 'node:events';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
@@ -232,5 +232,17 @@ describe('reports', () => {
     const b = await setupDocs();
     const { body } = await request(app).post('/api/runs').set(a.auth).send({ resumeId: a.resumeId, jdId: a.jdId });
     await request(app).get(`/api/reports/${body.runId}`).set(b.auth).expect(404);
+  });
+});
+
+describe('GET /api/evals/latest (public)', () => {
+  it('404s when there are no results, then returns the latest run and the trend without auth', async () => {
+    await request(app).get('/api/evals/latest').expect(404);
+    const base = { datasetVersion: 'v1', model: { parse: 'p', score: 's' }, gitSha: 'abc', cases: 11, perCase: [] };
+    await EvalResultModel.create({ ...base, promptVersion: 'v1', passed: false, metrics: { evidenceValidity: 0.9 } });
+    await EvalResultModel.create({ ...base, promptVersion: 'v2', passed: true, metrics: { evidenceValidity: 0.97 } });
+    const res = await request(app).get('/api/evals/latest').expect(200);
+    expect(res.body.latest).toMatchObject({ promptVersion: 'v2', passed: true });
+    expect(res.body.history.map((h: { promptVersion: string }) => h.promptVersion)).toEqual(['v1', 'v2']);
   });
 });

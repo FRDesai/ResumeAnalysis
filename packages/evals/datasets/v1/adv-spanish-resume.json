@@ -1,0 +1,51 @@
+{
+  "id": "adv-spanish-resume",
+  "category": "adversarial",
+  "description": "Strong backend resume written in Spanish vs an English JD. Quotes must be copied in Spanish, not translated.",
+  "resume": "Lucía Fernández\nIngeniera de Backend Senior\nPagosYa - Ingeniera de Backend Senior (2019 - Actualidad)\n- Diseñé APIs REST en Node.js para procesar pagos con tarjeta, con 1.500 solicitudes por segundo\n- Migré la base de datos de transacciones a MongoDB, reduciendo la latencia un 45%\n- Despliego servicios en AWS (Lambda y DynamoDB) y Kubernetes (EKS)\n- Mentoricé a 2 ingenieros junior\nHabilidades: Node.js, TypeScript, MongoDB, AWS, Kubernetes",
+  "jd": "Senior Backend Engineer - Payments Platform\nMust have: 5+ years building backend services in Node.js\nMust have: Experience with MongoDB or another NoSQL database\nMust have: Designing and operating REST APIs at scale\nMust have: Hands-on experience with AWS\nNice to have: Kubernetes\nNice to have: Payments or fintech domain experience\nNice to have: Mentoring other engineers",
+  "labels": {
+    "requirements": [
+      {
+        "keyword": "Node.js",
+        "status": "met"
+      },
+      {
+        "keyword": "MongoDB",
+        "status": "met"
+      },
+      {
+        "keyword": "REST",
+        "status": "met"
+      },
+      {
+        "keyword": "AWS",
+        "status": "met"
+      },
+      {
+        "keyword": "Kubernetes",
+        "status": "met"
+      },
+      {
+        "keyword": "Payments",
+        "status": "met"
+      },
+      {
+        "keyword": "Mentoring",
+        "status": "met"
+      }
+    ],
+    "dimensions": {
+      "Role fit": 5,
+      "Technical depth": 4,
+      "Impact and metrics": 4,
+      "Leadership and ownership": 3,
+      "Relevance of recent work": 5,
+      "Clarity of the resume": 4
+    },
+    "banned": [
+      "Stripe",
+      "Kafka"
+    ]
+  }
+}

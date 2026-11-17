@@ -149,5 +149,11 @@ export interface Report {
   flags: Flag[];
   promptVersion: string;
   model: { parse: string; score: string };
-  verifier: { scoreAttempts: number; firstPassValidity: number };
+  verifier: {
+    scoreAttempts: number;
+    firstPassValidity: number;
+    /** Raw counts, so evals can pool validity across cases. */
+    firstPassChecked: number;
+    firstPassVerified: number;
+  };
 }

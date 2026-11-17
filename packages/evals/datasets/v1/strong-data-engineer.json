@@ -1,0 +1,48 @@
+{
+  "id": "strong-data-engineer",
+  "category": "strong",
+  "description": "Data engineer with Spark, Airflow, dbt and Snowflake vs a data engineering role: strong fit.",
+  "resume": "Meera Iyer\nData Engineer\nQuantix Analytics - Data Engineer (2021 - Present)\n- Built batch pipelines in Python and Apache Spark processing 2 TB of clickstream data per day\n- Orchestrated 120+ Airflow DAGs with SLA alerting\n- Modelled the marketing data mart in Snowflake using dbt, cutting report build time from 3 hours to 20 minutes\n- Wrote complex SQL for finance reconciliation reports\nInsightly - Junior Data Analyst (2019 - 2021)\n- Automated weekly KPI reports in Python and SQL, saving 10 analyst hours per week\nSkills: Python, SQL, Spark, Airflow, dbt, Snowflake, AWS S3",
+  "jd": "Data Engineer\nMust have: Python for building data pipelines\nMust have: Strong SQL and data modelling\nMust have: Apache Spark\nMust have: Workflow orchestration with Airflow\nNice to have: Experience with dbt\nNice to have: A cloud data warehouse such as Snowflake or BigQuery",
+  "labels": {
+    "requirements": [
+      {
+        "keyword": "Python",
+        "status": "met"
+      },
+      {
+        "keyword": "SQL",
+        "status": "met"
+      },
+      {
+        "keyword": "Spark",
+        "status": "met"
+      },
+      {
+        "keyword": "Airflow",
+        "status": "met"
+      },
+      {
+        "keyword": "dbt",
+        "status": "met"
+      },
+      {
+        "keyword": "Snowflake",
+        "status": "met"
+      }
+    ],
+    "dimensions": {
+      "Role fit": 5,
+      "Technical depth": 4,
+      "Impact and metrics": 4,
+      "Leadership and ownership": 2,
+      "Relevance of recent work": 5,
+      "Clarity of the resume": 4
+    },
+    "banned": [
+      "Kafka",
+      "Databricks",
+      "Redshift"
+    ]
+  }
+}

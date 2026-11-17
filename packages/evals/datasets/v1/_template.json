@@ -1,0 +1,32 @@
+{
+  "id": "my-new-case",
+  "category": "strong | partial | poor | adversarial | edge",
+  "description": "What this case tests, in one sentence.",
+  "resume": "Full resume text. Use real (anonymised, with consent) resumes where possible.",
+  "jd": "Job description text, one requirement per line works best.",
+  "labels": {
+    "requirements": [
+      {
+        "keyword": "Node.js",
+        "status": "met"
+      },
+      {
+        "keyword": "Kubernetes",
+        "status": [
+          "missing",
+          "partial"
+        ]
+      }
+    ],
+    "dimensions": {
+      "Role fit": 4,
+      "Technical depth": 3
+    },
+    "banned": [
+      "specific facts in NEITHER the resume NOR the JD (e.g. a tool or employer the model might invent); avoid words that could appear in honest negative reasons"
+    ],
+    "injection": {
+      "baseline": "only for injection cases: id of the same resume without the injection"
+    }
+  }
+}

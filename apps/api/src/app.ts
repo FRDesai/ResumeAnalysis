@@ -9,6 +9,7 @@ import { requireAuth } from './middleware/auth.js';
 import { errorHandler, HttpError } from './middleware/errors.js';
 import { authRouter } from './routes/auth.js';
 import { documentsRouter } from './routes/documents.js';
+import { evalsRouter } from './routes/evals.js';
 import { reportsRouter } from './routes/reports.js';
 import { runsRouter, type RunDeps } from './routes/runs.js';
 
@@ -55,6 +56,7 @@ export function createApp(config: Config, deps: AppDeps) {
     res.json({ ok: true });
   });
   app.use('/api/auth', authLimiter, authRouter(config));
+  app.use('/api/evals', apiLimiter, evalsRouter()); // public: mounted before requireAuth
   app.use('/api', apiLimiter, requireAuth(config.JWT_SECRET));
   app.use('/api/documents', documentsRouter());
   app.use('/api/runs', runsRouter({ runsPerHour: 10, ...deps }));

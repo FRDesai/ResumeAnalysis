@@ -19,7 +19,7 @@ export function reportsRouter() {
     const { page, limit } = Page.parse(req.query);
     const [items, total] = await Promise.all([
       ReportModel.find({ userId: user.id }, { runId: 1, overall: 1, verdict: 1, promptVersion: 1, model: 1, createdAt: 1 })
-        .sort({ createdAt: -1 })
+        .sort({ createdAt: -1, _id: -1 })
         .skip((page - 1) * limit)
         .limit(limit)
         .lean(),

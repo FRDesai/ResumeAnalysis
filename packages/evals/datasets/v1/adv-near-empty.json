@@ -1,0 +1,39 @@
+{
+  "id": "adv-near-empty",
+  "category": "adversarial",
+  "description": "A resume with only a name, email and title. Every dimension should be low or \"insufficient evidence\".",
+  "resume": "Sam Lee\nsam.lee@example.com\nSoftware Engineer",
+  "jd": "Senior Backend Engineer - Payments Platform\nMust have: 5+ years building backend services in Node.js\nMust have: Experience with MongoDB or another NoSQL database\nMust have: Designing and operating REST APIs at scale\nMust have: Hands-on experience with AWS\nNice to have: Kubernetes\nNice to have: Payments or fintech domain experience\nNice to have: Mentoring other engineers",
+  "labels": {
+    "requirements": [
+      {
+        "keyword": "Node.js",
+        "status": "missing"
+      },
+      {
+        "keyword": "MongoDB",
+        "status": "missing"
+      },
+      {
+        "keyword": "REST",
+        "status": "missing"
+      },
+      {
+        "keyword": "AWS",
+        "status": "missing"
+      }
+    ],
+    "dimensions": {
+      "Role fit": "low",
+      "Technical depth": "low",
+      "Impact and metrics": "low",
+      "Leadership and ownership": "low",
+      "Clarity of the resume": "low"
+    },
+    "banned": [
+      "Express",
+      "TypeScript",
+      "Docker"
+    ]
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "id": "edge-no-metrics",
+  "category": "edge",
+  "description": "Backend developer whose bullets are duties only, no outcomes or numbers.",
+  "resume": "Vikram Singh\nBackend Developer\nOrbit Systems - Backend Developer (2019 - Present)\n- Responsible for backend development using Node.js\n- Worked on APIs for the mobile app\n- Involved in database tasks with MongoDB\n- Participated in deployments to AWS\nSkills: Node.js, MongoDB, AWS, Git",
+  "jd": "Senior Backend Engineer - Payments Platform\nMust have: 5+ years building backend services in Node.js\nMust have: Experience with MongoDB or another NoSQL database\nMust have: Designing and operating REST APIs at scale\nMust have: Hands-on experience with AWS\nNice to have: Kubernetes\nNice to have: Payments or fintech domain experience\nNice to have: Mentoring other engineers",
+  "labels": {
+    "requirements": [
+      {
+        "keyword": "Node.js",
+        "status": [
+          "met",
+          "partial"
+        ]
+      },
+      {
+        "keyword": "MongoDB",
+        "status": [
+          "met",
+          "partial"
+        ]
+      },
+      {
+        "keyword": "REST",
+        "status": [
+          "partial",
+          "met"
+        ]
+      },
+      {
+        "keyword": "AWS",
+        "status": [
+          "partial",
+          "met"
+        ]
+      },
+      {
+        "keyword": "Kubernetes",
+        "status": "missing"
+      },
+      {
+        "keyword": "Payments",
+        "status": "missing"
+      },
+      {
+        "keyword": "Mentoring",
+        "status": "missing"
+      }
+    ],
+    "dimensions": {
+      "Role fit": 3,
+      "Technical depth": 2,
+      "Impact and metrics": 1,
+      "Leadership and ownership": 1,
+      "Relevance of recent work": 4,
+      "Clarity of the resume": 2
+    },
+    "banned": [
+      "requests per second",
+      "Terraform",
+      "TypeScript"
+    ]
+  }
+}

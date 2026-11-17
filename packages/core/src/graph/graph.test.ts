@@ -83,7 +83,7 @@ describe('analysis graph', () => {
     });
     expect(report.dimensions.every((d) => d.status === 'verified' && d.score === 4)).toBe(true);
     expect(report.overall).toBe(75); // all 4/5 -> (4-1)/4 = 75
-    expect(report.verifier).toEqual({ scoreAttempts: 1, firstPassValidity: 1 });
+    expect(report.verifier).toEqual({ scoreAttempts: 1, firstPassValidity: 1, firstPassChecked: 6, firstPassVerified: 6 });
     expect(events.map((e) => e.type)).toEqual(
       expect.arrayContaining(['parseResume:done', 'parseJD:done', 'verifyEvidence:done', 'assembleReport:done']),
     );

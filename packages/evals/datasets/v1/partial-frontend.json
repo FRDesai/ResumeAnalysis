@@ -1,0 +1,61 @@
+{
+  "id": "partial-frontend",
+  "category": "partial",
+  "description": "Frontend engineer with light Node.js vs a senior backend role: partial fit, many must-have gaps.",
+  "resume": "Neha Kapoor\nFrontend Engineer\nPixelcraft Studio - Frontend Engineer (2021 - Present)\n- Built a React and Next.js analytics dashboard used by 40,000 monthly users\n- Wrote small Node.js and Express endpoints to serve dashboard data\n- Improved the Lighthouse performance score from 62 to 91\nBrightlabs - Junior Web Developer (2019 - 2021)\n- Developed responsive marketing pages with HTML, CSS and JavaScript\n- Integrated third-party REST APIs for a payments checkout widget\nSkills: React, Next.js, TypeScript, JavaScript, Node.js, Firebase, Figma",
+  "jd": "Senior Backend Engineer - Payments Platform\nMust have: 5+ years building backend services in Node.js\nMust have: Experience with MongoDB or another NoSQL database\nMust have: Designing and operating REST APIs at scale\nMust have: Hands-on experience with AWS\nNice to have: Kubernetes\nNice to have: Payments or fintech domain experience\nNice to have: Mentoring other engineers",
+  "labels": {
+    "requirements": [
+      {
+        "keyword": "Node.js",
+        "status": "partial"
+      },
+      {
+        "keyword": "MongoDB",
+        "status": [
+          "missing",
+          "partial"
+        ]
+      },
+      {
+        "keyword": "REST",
+        "status": [
+          "partial",
+          "missing"
+        ]
+      },
+      {
+        "keyword": "AWS",
+        "status": "missing"
+      },
+      {
+        "keyword": "Kubernetes",
+        "status": "missing"
+      },
+      {
+        "keyword": "Payments",
+        "status": [
+          "partial",
+          "missing"
+        ]
+      },
+      {
+        "keyword": "Mentoring",
+        "status": "missing"
+      }
+    ],
+    "dimensions": {
+      "Role fit": 2,
+      "Technical depth": 2,
+      "Impact and metrics": 3,
+      "Leadership and ownership": 1,
+      "Relevance of recent work": 2,
+      "Clarity of the resume": 4
+    },
+    "banned": [
+      "Lambda",
+      "EKS",
+      "Terraform"
+    ]
+  }
+}

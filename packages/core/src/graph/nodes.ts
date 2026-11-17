@@ -208,6 +208,8 @@ export const makeAssemble = (models: Models): Node => async (s) => {
       verifier: {
         scoreAttempts: s.scoreAttempts,
         firstPassValidity: fp.checked ? fp.verified / fp.checked : 1,
+        firstPassChecked: fp.checked,
+        firstPassVerified: fp.verified,
       },
     },
   };

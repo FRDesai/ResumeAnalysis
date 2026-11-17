@@ -1,0 +1,57 @@
+{
+  "id": "edge-fresher",
+  "category": "edge",
+  "description": "New graduate with projects and one internship vs a junior full-stack role.",
+  "resume": "Rohan Gupta\nB.Tech Computer Science, Pune University (2025)\nProjects\n- Built a campus events app with React and Firebase\n- Created a REST API in Node.js and Express for a library management system\nInternship\nCodeNest - Software Intern (Summer 2024)\n- Fixed UI bugs in a React web app and wrote unit tests with Jest\nSkills: JavaScript, React, Node.js, Git, MySQL",
+  "jd": "Junior Full-Stack Developer\nMust have: JavaScript\nMust have: React\nMust have: Node.js\nMust have: Git and version control\nNice to have: SQL databases\nNice to have: Teaching or mentoring experience",
+  "labels": {
+    "requirements": [
+      {
+        "keyword": "JavaScript",
+        "status": [
+          "met",
+          "partial"
+        ]
+      },
+      {
+        "keyword": "React",
+        "status": "met"
+      },
+      {
+        "keyword": "Node.js",
+        "status": "met"
+      },
+      {
+        "keyword": "Git",
+        "status": [
+          "met",
+          "partial"
+        ]
+      },
+      {
+        "keyword": "SQL",
+        "status": [
+          "partial",
+          "met"
+        ]
+      },
+      {
+        "keyword": "Teaching",
+        "status": "missing"
+      }
+    ],
+    "dimensions": {
+      "Role fit": 3,
+      "Technical depth": 2,
+      "Impact and metrics": 1,
+      "Leadership and ownership": 1,
+      "Relevance of recent work": 4,
+      "Clarity of the resume": 4
+    },
+    "banned": [
+      "TypeScript",
+      "Docker",
+      "MongoDB"
+    ]
+  }
+}

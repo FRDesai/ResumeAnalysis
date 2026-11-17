@@ -1,0 +1,55 @@
+{
+  "id": "strong-backend-node",
+  "category": "strong",
+  "description": "Senior Node.js payments engineer vs a senior backend payments role: near-perfect fit except Kubernetes.",
+  "resume": "Arjun Mehta\nSenior Software Engineer\nFinlytics Payments - Senior Backend Engineer (2020 - Present)\n- Designed and built REST APIs in Node.js and TypeScript for card payment processing, handling 3,000 requests per second\n- Migrated the transaction ledger from PostgreSQL to MongoDB, cutting query latency by 60%\n- Run services on AWS (ECS, Lambda, SQS) with Terraform-managed infrastructure\n- Mentored 3 junior engineers and led code reviews for the payments team\nShopSphere - Backend Engineer (2017 - 2020)\n- Built order and inventory services in Node.js and Express backed by MongoDB\n- Reduced checkout API error rate from 2% to 0.3% by adding retries and idempotency keys\nSkills: Node.js, TypeScript, Express, MongoDB, PostgreSQL, AWS, Docker, Redis\nEducation: B.Tech Computer Science, 2017",
+  "jd": "Senior Backend Engineer - Payments Platform\nMust have: 5+ years building backend services in Node.js\nMust have: Experience with MongoDB or another NoSQL database\nMust have: Designing and operating REST APIs at scale\nMust have: Hands-on experience with AWS\nNice to have: Kubernetes\nNice to have: Payments or fintech domain experience\nNice to have: Mentoring other engineers",
+  "labels": {
+    "requirements": [
+      {
+        "keyword": "Node.js",
+        "status": "met"
+      },
+      {
+        "keyword": "MongoDB",
+        "status": "met"
+      },
+      {
+        "keyword": "REST",
+        "status": "met"
+      },
+      {
+        "keyword": "AWS",
+        "status": "met"
+      },
+      {
+        "keyword": "Kubernetes",
+        "status": [
+          "missing",
+          "partial"
+        ]
+      },
+      {
+        "keyword": "Payments",
+        "status": "met"
+      },
+      {
+        "keyword": "Mentoring",
+        "status": "met"
+      }
+    ],
+    "dimensions": {
+      "Role fit": 5,
+      "Technical depth": 4,
+      "Impact and metrics": 4,
+      "Leadership and ownership": 3,
+      "Relevance of recent work": 5,
+      "Clarity of the resume": 4
+    },
+    "banned": [
+      "Stripe",
+      "Kafka",
+      "10 years"
+    ]
+  }
+}

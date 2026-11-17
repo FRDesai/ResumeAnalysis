@@ -1,0 +1,54 @@
+{
+  "id": "edge-career-changer",
+  "category": "edge",
+  "description": "Maths teacher turned bootcamp developer vs a junior full-stack role: projects only, strong mentoring.",
+  "resume": "Anita Desai\nCareer changer: Mathematics teacher to software developer\nProjects\n- StudyBuddy: a React and Node.js app for tracking homework, deployed on Render\n- Built a quiz generator in JavaScript used by 120 students in my classes\nEducation\n- Full-Stack Web Development Bootcamp, CodeCamp Academy (2025)\nExperience\nGreenwood High School - Mathematics Teacher (2016 - 2025)\n- Taught algebra and statistics to classes of 35 students\n- Mentored 4 trainee teachers each year\nSkills: JavaScript, React, Node.js, Git, HTML, CSS",
+  "jd": "Junior Full-Stack Developer\nMust have: JavaScript\nMust have: React\nMust have: Node.js\nMust have: Git and version control\nNice to have: SQL databases\nNice to have: Teaching or mentoring experience",
+  "labels": {
+    "requirements": [
+      {
+        "keyword": "JavaScript",
+        "status": "met"
+      },
+      {
+        "keyword": "React",
+        "status": "met"
+      },
+      {
+        "keyword": "Node.js",
+        "status": [
+          "met",
+          "partial"
+        ]
+      },
+      {
+        "keyword": "Git",
+        "status": [
+          "met",
+          "partial"
+        ]
+      },
+      {
+        "keyword": "SQL",
+        "status": "missing"
+      },
+      {
+        "keyword": "Teaching",
+        "status": "met"
+      }
+    ],
+    "dimensions": {
+      "Role fit": 3,
+      "Technical depth": 2,
+      "Impact and metrics": 2,
+      "Leadership and ownership": 3,
+      "Relevance of recent work": 3,
+      "Clarity of the resume": 4
+    },
+    "banned": [
+      "TypeScript",
+      "MongoDB",
+      "Python"
+    ]
+  }
+}

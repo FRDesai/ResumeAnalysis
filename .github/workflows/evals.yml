@@ -1,0 +1,51 @@
+name: Evals
+# Runs the golden eval set against real models and fails the PR when a metric
+# drops below its PRD threshold. Triggered by changes to anything that can move
+# quality: prompts, graph, verifier, schemas, or the dataset itself.
+on:
+  pull_request:
+    paths:
+      - 'packages/core/**'
+      - 'packages/evals/**'
+      - '.github/workflows/evals.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: evals-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      LLM_PROVIDER: anthropic
+      # Optional: LangSmith traces for every eval run.
+      LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
+      LANGSMITH_TRACING: ${{ secrets.LANGSMITH_API_KEY != '' }}
+    steps:
+      - name: Skip when no API key (e.g. PRs from forks)
+        if: env.ANTHROPIC_API_KEY == ''
+        run: echo "::warning::ANTHROPIC_API_KEY secret not set; eval gate skipped." && exit 0
+
+      - uses: actions/checkout@v4
+        if: env.ANTHROPIC_API_KEY != ''
+      - uses: pnpm/action-setup@v4
+        if: env.ANTHROPIC_API_KEY != ''
+      - uses: actions/setup-node@v4
+        if: env.ANTHROPIC_API_KEY != ''
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+        if: env.ANTHROPIC_API_KEY != ''
+
+      - name: Run eval suite (fails on any threshold miss)
+        if: env.ANTHROPIC_API_KEY != ''
+        run: pnpm evals --summary "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload results
+        if: always() && env.ANTHROPIC_API_KEY != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-results
+          path: packages/evals/results/latest.json

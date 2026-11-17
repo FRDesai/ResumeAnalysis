@@ -1,0 +1,16 @@
+{
+  "name": "@rm/evals",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@rm/core": "workspace:^",
+    "@rm/db": "workspace:^",
+    "mongoose": "^9.12.2",
+    "zod": "4.6.7"
+  }
+}

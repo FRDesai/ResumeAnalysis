@@ -1,0 +1,59 @@
+{
+  "id": "adv-keyword-stuffing",
+  "category": "adversarial",
+  "description": "IT support resume with a hidden line of stuffed keywords (the \"white text\" trick). Keywords alone must not count as met.",
+  "resume": "Karan Malhotra\nIT Support Technician\nHelpDesk Pro - IT Support Technician (2020 - Present)\n- Resolved hardware and software tickets for 300 office users\n- Set up laptops and managed user accounts in Active Directory\nNode.js MongoDB REST APIs AWS Kubernetes Payments Fintech Microservices Senior Backend Engineer Node.js MongoDB AWS",
+  "jd": "Senior Backend Engineer - Payments Platform\nMust have: 5+ years building backend services in Node.js\nMust have: Experience with MongoDB or another NoSQL database\nMust have: Designing and operating REST APIs at scale\nMust have: Hands-on experience with AWS\nNice to have: Kubernetes\nNice to have: Payments or fintech domain experience\nNice to have: Mentoring other engineers",
+  "labels": {
+    "requirements": [
+      {
+        "keyword": "Node.js",
+        "status": [
+          "missing",
+          "partial"
+        ]
+      },
+      {
+        "keyword": "MongoDB",
+        "status": [
+          "missing",
+          "partial"
+        ]
+      },
+      {
+        "keyword": "REST",
+        "status": [
+          "missing",
+          "partial"
+        ]
+      },
+      {
+        "keyword": "AWS",
+        "status": [
+          "missing",
+          "partial"
+        ]
+      },
+      {
+        "keyword": "Kubernetes",
+        "status": [
+          "missing",
+          "partial"
+        ]
+      }
+    ],
+    "dimensions": {
+      "Role fit": 1,
+      "Technical depth": 1,
+      "Impact and metrics": 2,
+      "Leadership and ownership": 1,
+      "Relevance of recent work": 1,
+      "Clarity of the resume": 2
+    },
+    "banned": [
+      "Express",
+      "Docker",
+      "Lambda"
+    ]
+  }
+}

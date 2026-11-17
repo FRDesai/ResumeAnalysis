@@ -1,0 +1,55 @@
+{
+  "id": "poor-sales",
+  "category": "poor",
+  "description": "Retail sales associate vs a senior backend role: no technical overlap.",
+  "resume": "Rahul Verma\nSenior Sales Associate\nMetro Electronics - Senior Sales Associate (2018 - Present)\n- Exceeded quarterly sales targets by 25% for 8 consecutive quarters\n- Trained 6 new sales associates on product knowledge and customer service\n- Managed store inventory using SAP\nCityMart - Sales Associate (2015 - 2018)\n- Handled customer queries and returns for home appliances\nSkills: Negotiation, CRM, Microsoft Excel, SAP",
+  "jd": "Senior Backend Engineer - Payments Platform\nMust have: 5+ years building backend services in Node.js\nMust have: Experience with MongoDB or another NoSQL database\nMust have: Designing and operating REST APIs at scale\nMust have: Hands-on experience with AWS\nNice to have: Kubernetes\nNice to have: Payments or fintech domain experience\nNice to have: Mentoring other engineers",
+  "labels": {
+    "requirements": [
+      {
+        "keyword": "Node.js",
+        "status": "missing"
+      },
+      {
+        "keyword": "MongoDB",
+        "status": "missing"
+      },
+      {
+        "keyword": "REST",
+        "status": "missing"
+      },
+      {
+        "keyword": "AWS",
+        "status": "missing"
+      },
+      {
+        "keyword": "Kubernetes",
+        "status": "missing"
+      },
+      {
+        "keyword": "Payments",
+        "status": "missing"
+      },
+      {
+        "keyword": "Mentoring",
+        "status": [
+          "partial",
+          "missing"
+        ]
+      }
+    ],
+    "dimensions": {
+      "Role fit": 1,
+      "Technical depth": 1,
+      "Impact and metrics": 3,
+      "Leadership and ownership": 3,
+      "Relevance of recent work": 1,
+      "Clarity of the resume": 4
+    },
+    "banned": [
+      "Express",
+      "Lambda",
+      "Docker"
+    ]
+  }
+}
