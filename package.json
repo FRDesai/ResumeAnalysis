@@ -1,0 +1,27 @@
+{
+  "name": "resumematch-v2",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev:api": "pnpm --filter @rm/api dev",
+    "dev:worker": "pnpm --filter @rm/worker dev",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "typecheck": "tsc -p packages/core && tsc -p apps/api",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@eslint/js": "9",
+    "@types/node": "22",
+    "eslint": "9",
+    "prettier": "^3.10.1",
+    "tsx": "^4.23.15",
+    "typescript": "5",
+    "typescript-eslint": "^8.73.0",
+    "vitest": "^5.1.0"
+  }
+}
