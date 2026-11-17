@@ -1,4 +1,4 @@
-import { FeedbackModel, ReportModel, Run } from '@rm/db';
+import { DocumentModel, FeedbackModel, ReportModel, Run } from '@rm/db';
 import { Router } from 'express';
 import { isValidObjectId } from 'mongoose';
 import { z } from 'zod';
@@ -46,7 +46,20 @@ export function reportsRouter() {
       // 409: the run exists but has no report (still running, or failed).
       throw new HttpError(409, run.status === 'failed' ? `Run failed: ${run.error}` : `Report not ready (run is ${run.status})`);
     }
-    res.json(report);
+    // The report page shows the resume side by side and highlights evidence lines,
+    // so it needs the line-numbered text (owner only, same as the report).
+    const run = await Run.findById(runId, { resumeId: 1, jdId: 1 }).lean();
+    const [resume, jd] = await Promise.all([
+      DocumentModel.findOne({ _id: run?.resumeId, userId: user.id }, { lines: 1 }).lean(),
+      DocumentModel.findOne({ _id: run?.jdId, userId: user.id }, { lines: 1 }).lean(),
+    ]);
+    const myVotes = await FeedbackModel.find({ runId, userId: user.id }, { targetType: 1, targetId: 1, vote: 1 }).lean();
+    res.json({
+      ...report,
+      resumeLines: resume?.lines ?? [],
+      jdLines: jd?.lines ?? [],
+      votes: myVotes.map((v) => ({ targetType: v.targetType, targetId: v.targetId, vote: v.vote })),
+    });
   });
 
   /**

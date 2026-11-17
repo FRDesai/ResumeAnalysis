@@ -11,10 +11,11 @@
     "dev:worker": "pnpm --filter @rm/worker dev",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "typecheck": "tsc -p packages/core && tsc -p packages/db && tsc -p packages/evals && tsc -p apps/api && tsc -p apps/worker",
+    "typecheck": "tsc -p packages/core && tsc -p packages/db && tsc -p packages/evals && tsc -p apps/api && tsc -p apps/worker && tsc -p apps/web",
     "test": "vitest run",
     "evals": "tsx --env-file-if-exists=.env packages/evals/src/cli.ts",
-    "evals:feedback": "tsx --env-file-if-exists=.env packages/evals/src/feedback.ts"
+    "evals:feedback": "tsx --env-file-if-exists=.env packages/evals/src/feedback.ts",
+    "dev:web": "pnpm --filter @rm/web dev"
   },
   "devDependencies": {
     "@eslint/js": "9",

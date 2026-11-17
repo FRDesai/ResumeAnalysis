@@ -17,6 +17,27 @@ describe('normalizeText', () => {
     expect(normalizeText(raw)).toBe('Jane Doe\nSenior Engineer');
   });
 
+  it('joins PDF-wrapped continuation lines back into one line', () => {
+    const raw = [
+      '- Designed and built REST APIs in Node.js and TypeScript for card payment',
+      'processing, handling 3,000 requests per second',
+      '- Involved in building order services in Node.js and Express backed by',
+      'MongoDB',
+      'Skills: Node.js, TypeScript, Express,',
+      'Redis',
+    ].join('\n');
+    expect(normalizeText(raw).split('\n')).toEqual([
+      '- Designed and built REST APIs in Node.js and TypeScript for card payment processing, handling 3,000 requests per second',
+      '- Involved in building order services in Node.js and Express backed by MongoDB',
+      'Skills: Node.js, TypeScript, Express, Redis',
+    ]);
+  });
+
+  it('does not join new bullets, headings, or lines starting with names like iOS', () => {
+    const raw = ['Experience', '- Built the payments API', '- Led the team', 'Skills:', 'iOS Developer', 'eBay (2019)'].join('\n');
+    expect(normalizeText(raw).split('\n')).toHaveLength(6);
+  });
+
   it('is idempotent', () => {
     const once = normalizeText(' a  b \n\n c ');
     expect(normalizeText(once)).toBe(once);
