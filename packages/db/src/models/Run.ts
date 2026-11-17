@@ -33,12 +33,15 @@ const RunSchema = new Schema(
     models: { parse: String, score: String },
     startedAt: { type: Date, default: null },
     finishedAt: { type: Date, default: null },
+    /** Set for anonymous users: deleted by the TTL index (PRD: 7 days). */
+    expiresAt: { type: Date, default: null },
   },
   { timestamps: true },
 );
 
 RunSchema.index({ userId: 1, createdAt: -1 });
 RunSchema.index({ userId: 1, idemKey: 1 });
+RunSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export type RunDoc = InferSchemaType<typeof RunSchema>;
 export const Run = model('Run', RunSchema);

@@ -13,12 +13,15 @@ const DocumentSchema = new Schema(
     hash: { type: String, required: true },
     /** Structured parse output, filled by the graph in Phase 2. */
     parsed: { type: Schema.Types.Mixed, default: null },
+    /** Set for anonymous users: deleted by the TTL index (PRD: 7 days). */
+    expiresAt: { type: Date, default: null },
   },
   { timestamps: true },
 );
 
 // Same user uploading the same content again reuses the existing document (no re-parse).
 DocumentSchema.index({ userId: 1, kind: 1, hash: 1 }, { unique: true });
+DocumentSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export type DocumentDoc = InferSchemaType<typeof DocumentSchema>;
 export const DocumentModel = model('Document', DocumentSchema);

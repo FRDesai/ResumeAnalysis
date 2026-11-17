@@ -75,11 +75,16 @@ export class LangChainLlm implements LlmClient {
       }
       if (json !== undefined) {
         const parsed = req.schema.safeParse(json);
-        if (parsed.success) return { data: parsed.data, usage };
-        lastIssues = parsed.error.issues
-          .slice(0, 10)
-          .map((i) => `${i.path.join('.') || '(root)'}: ${i.message}`)
-          .join('; ');
+        if (parsed.success) {
+          const problem = req.validate?.(parsed.data) ?? null;
+          if (!problem) return { data: parsed.data, usage };
+          lastIssues = problem;
+        } else {
+          lastIssues = parsed.error.issues
+            .slice(0, 10)
+            .map((i) => `${i.path.join('.') || '(root)'}: ${i.message}`)
+            .join('; ');
+        }
       }
       // One automatic retry with the validation error as feedback (PRD failure-mode table).
       messages.push(

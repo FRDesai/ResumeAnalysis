@@ -3,33 +3,40 @@ import { END, START, StateGraph } from '@langchain/langgraph';
 import type { Line } from '../ingest/normalize.js';
 import type { Models } from '../llm/types.js';
 import type { Report } from '../schemas.js';
-import { afterVerify, guard, ingest, makeAssemble, makeNodes, verifyEvidence } from './nodes.js';
+import { makeCoachNodes } from './coachNodes.js';
+import { afterVerify, ingest, makeAssemble, makeNodes, verifyEvidence } from './nodes.js';
 import { AnalysisState, type AnalysisStateType } from './state.js';
 
 /**
  * ingest -> guard -> (parseResume || parseJD) -> matchRequirements -> scoreDimensions
  *   -> verifyEvidence --(failures, retries left)--> scoreDimensions
- *                     \-> assembleReport -> END
+ *                     \-> generateQuestions --\
+ *          guard -> rewriteBullets (parallel) ---+-> assembleReport -> END
  */
 export function buildGraph(models: Models, checkpointer?: BaseCheckpointSaver) {
   const n = makeNodes(models);
+  const c = makeCoachNodes(models);
   return new StateGraph(AnalysisState)
     .addNode('ingest', ingest)
-    .addNode('guard', guard)
+    .addNode('guard', c.guard)
     .addNode('parseResume', n.parseResume)
     .addNode('parseJD', n.parseJD)
     .addNode('matchRequirements', n.matchRequirements)
     .addNode('scoreDimensions', n.scoreDimensions)
     .addNode('verifyEvidence', verifyEvidence)
+    .addNode('generateQuestions', c.generateQuestions)
+    .addNode('rewriteBullets', c.rewriteBullets)
     .addNode('assembleReport', makeAssemble(models))
     .addEdge(START, 'ingest')
     .addEdge('ingest', 'guard')
     .addEdge('guard', 'parseResume') // the two parse nodes run in parallel
     .addEdge('guard', 'parseJD')
+    .addEdge('guard', 'rewriteBullets') // only needs the resume: runs alongside everything else
     .addEdge(['parseResume', 'parseJD'], 'matchRequirements') // join: waits for both
     .addEdge('matchRequirements', 'scoreDimensions')
     .addEdge('scoreDimensions', 'verifyEvidence')
-    .addConditionalEdges('verifyEvidence', afterVerify, ['scoreDimensions', 'assembleReport'])
+    .addConditionalEdges('verifyEvidence', afterVerify, ['scoreDimensions', 'generateQuestions'])
+    .addEdge(['generateQuestions', 'rewriteBullets'], 'assembleReport') // join
     .addEdge('assembleReport', END)
     .compile({ checkpointer });
 }
@@ -94,6 +101,10 @@ function summarize(node: string, u: Partial<AnalysisStateType>): Record<string, 
       return { requirements: u.jd?.requirements.length ?? 0 };
     case 'matchRequirements':
       return { met: u.requirements?.filter((r) => r.status === 'met').length ?? 0 };
+    case 'generateQuestions':
+      return { questions: u.questions?.length ?? 0 };
+    case 'rewriteBullets':
+      return { accepted: u.rewrites?.filter((r) => r.accepted).length ?? 0, rejected: u.rewrites?.filter((r) => !r.accepted).length ?? 0 };
     case 'assembleReport':
       return { overall: u.report?.overall ?? null };
     default:

@@ -20,10 +20,13 @@ const ReportSchema = new Schema(
     verifier: Schema.Types.Mixed,
     promptVersion: { type: String, required: true },
     model: { parse: String, score: String },
+    /** Set for anonymous users: deleted by the TTL index (PRD: 7 days). */
+    expiresAt: { type: Date, default: null },
   },
   { timestamps: true },
 );
 
 ReportSchema.index({ userId: 1, createdAt: -1 });
+ReportSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export const ReportModel = model('Report', ReportSchema);

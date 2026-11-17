@@ -1,4 +1,4 @@
-import { EvalResultModel, ReportModel, Run, type EventBus, type RunEvent } from '@rm/db';
+import { DocumentModel, EvalResultModel, FeedbackModel, ReportModel, Run, User, type EventBus, type RunEvent } from '@rm/db';
 import { EventEmitter } from 'node:events';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
@@ -244,5 +244,108 @@ describe('GET /api/evals/latest (public)', () => {
     const res = await request(app).get('/api/evals/latest').expect(200);
     expect(res.body.latest).toMatchObject({ promptVersion: 'v2', passed: true });
     expect(res.body.history.map((h: { promptVersion: string }) => h.promptVersion)).toEqual(['v1', 'v2']);
+  });
+});
+
+// ---------------- Phase 4: anonymous users, feedback, delete-my-data ----------------
+
+async function makeReport(auth: Record<string, string>, resumeId: string, jdId: string) {
+  const { body } = await request(app).post('/api/runs').set(auth).send({ resumeId, jdId });
+  const run = await Run.findById(body.runId);
+  await ReportModel.create({
+    runId: run!._id,
+    userId: run!.userId,
+    overall: 60,
+    verdict: 'v',
+    dimensions: [{ name: 'Role fit', score: 3 }],
+    questions: [{ id: 'Q1' }],
+    requirements: [{ requirementId: 'R1' }],
+    rewrites: [{ lineId: 'L2' }],
+    promptVersion: 'v1',
+    model: { parse: 'p', score: 's' },
+    expiresAt: run!.expiresAt,
+  });
+  return body.runId as string;
+}
+
+describe('anonymous users', () => {
+  it('can analyse without an account, and everything they create expires in 7 days', async () => {
+    const anon = await request(app).post('/api/auth/anonymous').expect(201);
+    const auth = { Authorization: `Bearer ${anon.body.token}` };
+    const expires = new Date(anon.body.user.expiresAt).getTime();
+    expect(expires - Date.now()).toBeGreaterThan(6.9 * 24 * 3600 * 1000);
+
+    const jd = await request(app).post('/api/documents').set(auth).send({ kind: 'jd', text: 'Must have: Go' }).expect(201);
+    const pdf = await makePdf(['Ana Ruiz', 'Built Go services']);
+    const cv = await request(app).post('/api/documents').set(auth).attach('file', pdf, 'cv.pdf').expect(201);
+    const runId = await makeReport(auth, cv.body.documentId, jd.body.documentId);
+
+    for (const doc of [
+      await DocumentModel.findById(jd.body.documentId),
+      await Run.findById(runId),
+      await User.findById(anon.body.user.id),
+    ]) {
+      expect(doc!.expiresAt!.getTime()).toBe(expires);
+    }
+    const me = await request(app).get('/api/me').set(auth).expect(200);
+    expect(me.body).toMatchObject({ anonymous: true, email: null });
+  });
+
+  it('registered users never expire', async () => {
+    const { auth, jdId } = await setupDocs();
+    expect((await DocumentModel.findById(jdId))!.expiresAt).toBeNull();
+    const me = await request(app).get('/api/me').set(auth).expect(200);
+    expect(me.body.anonymous).toBe(false);
+  });
+});
+
+describe('POST /api/reports/:runId/feedback', () => {
+  it('records a vote, replaces it on re-vote, and rejects unknown targets', async () => {
+    const { auth, resumeId, jdId } = await setupDocs();
+    const runId = await makeReport(auth, resumeId, jdId);
+    const send = (b: object) => request(app).post(`/api/reports/${runId}/feedback`).set(auth).send(b);
+
+    await send({ targetType: 'question', targetId: 'Q1', vote: 'down', comment: 'too generic' }).expect(201);
+    await send({ targetType: 'question', targetId: 'Q1', vote: 'up' }).expect(201);
+    const all = await FeedbackModel.find({ runId }).lean();
+    expect(all).toHaveLength(1);
+    expect(all[0]).toMatchObject({ vote: 'up', comment: null, promptVersion: 'v1' });
+
+    await send({ targetType: 'dimension', targetId: 'Role fit', vote: 'down' }).expect(201);
+    await send({ targetType: 'question', targetId: 'Q9', vote: 'down' }).expect(400);
+    await send({ targetType: 'nonsense', targetId: 'Q1', vote: 'down' }).expect(400);
+  });
+
+  it("can't vote on someone else's report", async () => {
+    const a = await setupDocs();
+    const b = await setupDocs();
+    const runId = await makeReport(a.auth, a.resumeId, a.jdId);
+    await request(app)
+      .post(`/api/reports/${runId}/feedback`)
+      .set(b.auth)
+      .send({ targetType: 'question', targetId: 'Q1', vote: 'down' })
+      .expect(404);
+  });
+});
+
+describe('DELETE /api/me (delete my data)', () => {
+  it('deletes the account, documents, runs, reports, feedback and graph checkpoints, and kills the token', async () => {
+    const { auth, resumeId, jdId } = await setupDocs();
+    const other = await setupDocs();
+    const runId = await makeReport(auth, resumeId, jdId);
+    const otherRun = await makeReport(other.auth, other.resumeId, other.jdId);
+    await request(app).post(`/api/reports/${runId}/feedback`).set(auth).send({ targetType: 'question', targetId: 'Q1', vote: 'down' });
+    const cps = mongoose.connection.db!.collection('checkpoints');
+    await cps.insertMany([{ thread_id: runId }, { thread_id: runId }, { thread_id: otherRun }]);
+
+    const res = await request(app).delete('/api/me').set(auth).expect(200);
+    expect(res.body.deleted).toEqual({ documents: 2, runs: 1, reports: 1, feedback: 1, checkpoints: 2 });
+
+    // The old token no longer works, even though its signature is still valid.
+    const after = await request(app).get('/api/me').set(auth).expect(401);
+    expect(after.body.error).toBe('Account no longer exists');
+    // Other users are untouched.
+    expect(await cps.countDocuments({ thread_id: otherRun })).toBe(1);
+    await request(app).get(`/api/reports/${otherRun}`).set(other.auth).expect(200);
   });
 });

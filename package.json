@@ -13,7 +13,8 @@
     "format": "prettier --write .",
     "typecheck": "tsc -p packages/core && tsc -p packages/db && tsc -p packages/evals && tsc -p apps/api && tsc -p apps/worker",
     "test": "vitest run",
-    "evals": "tsx --env-file-if-exists=.env packages/evals/src/cli.ts"
+    "evals": "tsx --env-file-if-exists=.env packages/evals/src/cli.ts",
+    "evals:feedback": "tsx --env-file-if-exists=.env packages/evals/src/feedback.ts"
   },
   "devDependencies": {
     "@eslint/js": "9",

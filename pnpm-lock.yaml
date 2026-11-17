@@ -206,6 +206,9 @@ importers:
 
   packages/evals:
     dependencies:
+      '@langchain/openai':
+        specifier: 1.8.4
+        version: 1.8.4(@langchain/core@1.4.1(@opentelemetry/api@1.10.0)(openai@7.57.0(zod@4.6.7)))
       '@rm/core':
         specifier: workspace:^
         version: link:../core

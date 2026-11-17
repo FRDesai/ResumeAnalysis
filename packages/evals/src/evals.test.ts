@@ -168,3 +168,61 @@ describe('runEvals end to end (scripted models)', () => {
     expect(r.runs[0]!.report!.dimensions.every((d) => d.status === 'insufficient_evidence')).toBe(true);
   });
 });
+
+describe('phase 4 metrics', () => {
+  const noLabels = { ...baseCase, labels: { ...baseCase.labels, requirements: [], dimensions: {} } };
+
+  it('rewrite faithfulness re-checks accepted rewrites independently of the graph', () => {
+    const r = report({
+      rewrites: [
+        { lineId: 'L1', original: 'Built APIs in Node.js', suggestion: 'Built Node.js APIs', why: '', accepted: true, addedEntities: [] },
+        // Simulates a bug where the graph accepted an unfaithful rewrite:
+        { lineId: 'L2', original: 'Worked on billing', suggestion: 'Rebuilt billing on Kafka', why: '', accepted: true, addedEntities: [] },
+        { lineId: 'L3', original: 'Ran tests', suggestion: 'Ran 500 tests', why: '', accepted: false, addedEntities: ['500'] },
+      ],
+    });
+    const s = scoreCase(noLabels, run('c1', r));
+    expect(s.rewrites).toMatchObject({ proposed: 3, rejected: 1, accepted: 2, faithful: 1 });
+    expect(s.rewrites.unfaithful[0]).toMatch(/L2: adds Kafka/);
+    const m = aggregate([s], [run('c1', r)]);
+    expect(m.rewriteFaithfulness).toBe(0.5);
+    expect(checkGate(m, [run('c1', r)]).failures.join()).toMatch(/Rewrite faithfulness/);
+    expect(s.banned).toEqual(['Kafka']); // accepted rewrites are also checked for banned facts
+  });
+
+  it('question relevance is the mean judge score across all questions', () => {
+    const judged = (id: string, scores: number[]) =>
+      run(id, report(), { judge: { mean: 0, ratings: scores.map((score, i) => ({ id: `Q${i}`, score, reason: '', question: '' })) } });
+    const runs = [judged('a', [5, 4, 4]), judged('b', [3])];
+    const scores = runs.map((r) => scoreCase({ ...noLabels, id: r.caseId }, r));
+    const m = aggregate(scores, runs);
+    expect(m.questionRelevance).toBe(4);
+    expect(m.rewriteFaithfulness).toBeNull(); // no accepted rewrites -> not gated
+  });
+
+  it('runEvals passes questions to the judge and records its ratings', async () => {
+    const cases = loadDataset('v1').filter((c) => c.id === 'edge-no-metrics');
+    const judge = fakeModels({
+      judgeQuestions: (req: { user: string }) => ({
+        ratings: [...req.user.matchAll(/^(Q\d+) \[/gm)].map((m) => ({ id: m[1], score: 4, reason: 'ok' })),
+      }),
+    }).score;
+    const models = fakeModels({
+      parseResume: () => ({ name: null, headline: null, skills: [], roles: [], projects: [], metrics: [] }),
+      parseJD: () => ({ title: null, requirements: [{ id: 'R1', text: 'Node.js', kind: 'must', weight: 3 }] }),
+      matchRequirements: () => ({ matches: [{ requirementId: 'R1', status: 'missing', evidence: [], note: '' }] }),
+      scoreDimensions: (req: { user: string }) => ({
+        dimensions: req.user.match(/^Score these dimensions: (.+)$/m)![1]!.split(', ').map((name) => ({
+          name,
+          score: 2,
+          reason: 'r',
+          evidence: [{ lineId: 'L3', quote: 'Responsible for backend development using Node.js' }],
+        })),
+      }),
+    });
+    const r = await runEvals({ cases, models, judge });
+    expect(r.runs[0]!.judge!.ratings).toHaveLength(8);
+    expect(r.metrics.questionRelevance).toBe(4);
+    expect(judge.calls[0]!.user).toContain('R1 (must, missing): Node.js');
+  });
+});

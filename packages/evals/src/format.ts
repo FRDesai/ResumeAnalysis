@@ -29,13 +29,36 @@ export function toMarkdown(
   lines.push(`| --- | --- | --- | ${baseline ? '--- | ' : ''}--- |`);
   for (const [key, t] of Object.entries(THRESHOLDS) as [MetricKey, (typeof THRESHOLDS)[MetricKey]][]) {
     const v = result.metrics[key];
-    const ok = v === null ? 'not built yet' : (t.dir === 'min' ? v >= t.target : v <= t.target) ? 'pass' : '**FAIL**';
+    const ok = v === null ? 'not measured' : (t.dir === 'min' ? v >= t.target : v <= t.target) ? 'pass' : '**FAIL**';
     const cmp = baseline ? `${delta(key, v, baseline.metrics[key])} | ` : '';
     lines.push(`| ${t.label} | ${fmt(v, t.unit)} | ${t.dir === 'min' ? '>=' : '<='} ${fmt(t.target, t.unit)} | ${cmp}${ok} |`);
   }
 
+  const sum = (fn: (s: (typeof result.scores)[number]) => number) => result.scores.reduce((a, s) => a + fn(s), 0);
+  const proposed = sum((s) => s.rewrites.proposed);
+  const rejected = sum((s) => s.rewrites.rejected);
+  lines.push('');
+  lines.push(
+    `Rewrites: ${proposed} proposed, ${rejected} rejected by the entity check (${proposed ? ((rejected / proposed) * 100).toFixed(0) : 0}% of model rewrites invented a fact; users only see accepted ones).`,
+  );
+
+  // PRD: the judge is spot-checked by hand. Show the lowest-rated questions to read.
+  const rated = result.runs.flatMap((r) => (r.judge?.ratings ?? []).map((x) => ({ ...x, caseId: r.caseId })));
+  if (rated.length) {
+    const low = [...rated].sort((a, b) => a.score - b.score).slice(0, 3);
+    lines.push('', '<details><summary>Lowest-rated questions (spot-check the judge)</summary>', '');
+    for (const q of low) lines.push(`- **${q.score}/5** ${q.caseId} ${q.id}: ${q.question}  \n  _judge: ${q.reason}_`);
+    lines.push('', '</details>');
+  }
+
   const problems = result.scores.filter(
-    (s) => s.error || s.requirements.misses.length || s.dimensions.misses.length || s.banned.length || (s.injection && !s.injection.passed),
+    (s) =>
+      s.error ||
+      s.requirements.misses.length ||
+      s.dimensions.misses.length ||
+      s.banned.length ||
+      s.rewrites.unfaithful.length ||
+      (s.injection && !s.injection.passed),
   );
   if (problems.length) {
     lines.push('', '<details><summary>Per-case misses</summary>', '');
@@ -45,6 +68,7 @@ export function toMarkdown(
       for (const m of s.requirements.misses) lines.push(`- requirement ${m}`);
       for (const m of s.dimensions.misses) lines.push(`- dimension ${m}`);
       for (const b of s.banned) lines.push(`- banned output: "${b}"`);
+      for (const u of s.rewrites.unfaithful) lines.push(`- unfaithful rewrite shown to user: ${u}`);
       if (s.injection && !s.injection.passed) lines.push(`- injection: ${s.injection.detail}`);
     }
     lines.push('', '</details>');

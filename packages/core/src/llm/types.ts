@@ -13,6 +13,11 @@ export interface StructuredRequest<T> {
   schema: ZodType<T>;
   system: string;
   user: string;
+  /**
+   * Extra checks the JSON schema can't express (e.g. "exactly 8 items").
+   * Return an error message to trigger the same one-time retry as a Zod failure.
+   */
+  validate?: (data: T) => string | null;
 }
 
 export interface StructuredResult<T> {

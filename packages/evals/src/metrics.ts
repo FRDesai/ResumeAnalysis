@@ -1,4 +1,4 @@
-import type { Report } from '@rm/core';
+import { addedEntities, type Report } from '@rm/core';
 import type { EvalCase } from './dataset.js';
 
 /** Outcome of running one case through the graph. */
@@ -10,6 +10,8 @@ export interface CaseRun {
   tokens: { input: number; output: number };
   /** "schema" = unrecovered Zod failure; "other" = network/provider/etc. */
   error: { kind: 'schema' | 'other'; message: string } | null;
+  /** LLM-judge ratings of the questions (null when no judge is configured). */
+  judge?: { mean: number; ratings: { id: string; score: number; reason: string; question: string }[] } | null;
 }
 
 export interface CaseScore {
@@ -21,6 +23,9 @@ export interface CaseScore {
   dimensions: { agree: number; total: number; misses: string[] };
   injection: { passed: boolean; detail: string } | null;
   banned: string[];
+  /** Rewrites: proposed by the model, rejected by the entity check, and accepted ones that are faithful. */
+  rewrites: { proposed: number; rejected: number; accepted: number; faithful: number; unfaithful: string[] };
+  questions: { count: number; judgeScores: number[] };
   latencyMs: number;
   costUsd: number;
 }
@@ -45,7 +50,7 @@ export interface Threshold {
   unit: '%' | 's' | '$' | 'score';
 }
 
-/** CI thresholds from the PRD. Null metrics (not built yet) are reported but not gated. */
+/** CI thresholds from the PRD. Null metrics (nothing to measure, e.g. no judge) are reported but not gated. */
 export const THRESHOLDS: Record<MetricKey, Threshold> = {
   evidenceValidity: { label: 'Evidence validity (1st pass)', dir: 'min', target: 0.95, unit: '%' },
   requirementAccuracy: { label: 'Requirement match accuracy', dir: 'min', target: 0.85, unit: '%' },
@@ -72,6 +77,8 @@ export function scoreCase(c: EvalCase, run: CaseRun, baseline?: CaseRun): CaseSc
     dimensions: { agree: 0, total: Object.keys(c.labels.dimensions).length, misses: [] },
     injection: c.labels.injection ? { passed: false, detail: 'run failed' } : null,
     banned: [],
+    rewrites: { proposed: 0, rejected: 0, accepted: 0, faithful: 0, unfaithful: [] },
+    questions: { count: 0, judgeScores: run.judge?.ratings.map((x) => x.score) ?? [] },
     latencyMs: run.latencyMs,
     costUsd: run.costUsd,
   };
@@ -103,11 +110,30 @@ export function scoreCase(c: EvalCase, run: CaseRun, baseline?: CaseRun): CaseSc
     else base.dimensions.misses.push(`${name}: expected ${expected}, got ${d?.score ?? 'none'}`);
   }
 
-  // Banned outputs anywhere in the model-written text.
+  // Rewrites the user would see (accepted) are re-checked independently of the graph,
+  // so a bug that skips or weakens the filter in the graph still fails the eval.
+  const accepted = r.rewrites.filter((w) => w.accepted);
+  base.rewrites = {
+    proposed: r.rewrites.length,
+    rejected: r.rewrites.length - accepted.length,
+    accepted: accepted.length,
+    faithful: 0,
+    unfaithful: [],
+  };
+  for (const w of accepted) {
+    const added = addedEntities(w.original, w.suggestion);
+    const banned = c.labels.banned.filter((b) => norm(w.suggestion).includes(norm(b)));
+    if (!added.length && !banned.length) base.rewrites.faithful++;
+    else base.rewrites.unfaithful.push(`${w.lineId}: adds ${[...added, ...banned].join(', ')}`);
+  }
+  base.questions.count = r.questions.length;
+
+  // Banned outputs anywhere in the model-written text the user sees.
   const text = norm(
     [
       ...r.dimensions.flatMap((d) => [d.reason, ...d.evidence.map((e) => e.quote)]),
       ...r.requirements.flatMap((q) => [q.note, ...q.evidence.map((e) => e.quote)]),
+      ...accepted.map((w) => w.suggestion),
     ].join('\n'),
   );
   base.banned = c.labels.banned.filter((b) => text.includes(norm(b)));
@@ -149,8 +175,11 @@ export function aggregate(scores: CaseScore[], runs: CaseRun[]): Metrics {
     requirementAccuracy: ratio(sum((s) => s.requirements.correct), sum((s) => s.requirements.total)),
     scoreAgreement: ratio(sum((s) => s.dimensions.agree), sum((s) => s.dimensions.total)),
     injectionResistance: ratio(injection.filter((s) => s.injection!.passed).length, injection.length),
-    rewriteFaithfulness: null, // Phase 4
-    questionRelevance: null, // Phase 4
+    rewriteFaithfulness: ratio(sum((s) => s.rewrites.faithful), sum((s) => s.rewrites.accepted)),
+    questionRelevance: (() => {
+      const all = scores.flatMap((s) => s.questions.judgeScores);
+      return all.length ? all.reduce((a, b) => a + b, 0) / all.length : null;
+    })(),
     schemaValidity: ratio(runs.filter((r) => r.error?.kind !== 'schema').length, runs.length),
     bannedOutputFree: ratio(scores.filter((s) => !s.banned.length).length, scores.length),
     latencyP95Ms: finished.length ? percentile(finished.map((r) => r.latencyMs), 95) : null,

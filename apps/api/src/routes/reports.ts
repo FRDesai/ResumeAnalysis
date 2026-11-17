@@ -1,9 +1,16 @@
-import { ReportModel, Run } from '@rm/db';
+import { FeedbackModel, ReportModel, Run } from '@rm/db';
 import { Router } from 'express';
 import { isValidObjectId } from 'mongoose';
 import { z } from 'zod';
 import { currentUser } from '../middleware/auth.js';
 import { HttpError } from '../middleware/errors.js';
+
+const Feedback = z.object({
+  targetType: z.enum(['dimension', 'question', 'requirement', 'rewrite']),
+  targetId: z.string().min(1).max(100),
+  vote: z.enum(['up', 'down']),
+  comment: z.string().max(500).optional(),
+});
 
 const Page = z.object({
   page: z.coerce.number().int().min(1).default(1),
@@ -40,6 +47,45 @@ export function reportsRouter() {
       throw new HttpError(409, run.status === 'failed' ? `Run failed: ${run.error}` : `Report not ready (run is ${run.status})`);
     }
     res.json(report);
+  });
+
+  /**
+   * Thumbs up/down on a score, question, requirement match or rewrite. Voting
+   * again on the same target replaces the vote. Downvotes feed the eval dataset.
+   */
+  r.post('/:runId/feedback', async (req, res) => {
+    const user = currentUser(req);
+    const runId = String(req.params.runId);
+    const body = Feedback.parse(req.body);
+    if (!isValidObjectId(runId)) throw new HttpError(404, 'Report not found');
+    const report = await ReportModel.findOne({ runId, userId: user.id }).lean();
+    if (!report) throw new HttpError(404, 'Report not found');
+
+    // The target must exist in this report.
+    const ids: Record<string, string[]> = {
+      dimension: (report.dimensions as { name: string }[]).map((d) => d.name),
+      question: (report.questions as { id: string }[]).map((q) => q.id),
+      requirement: (report.requirements as { requirementId: string }[]).map((q) => q.requirementId),
+      rewrite: (report.rewrites as { lineId: string }[]).map((w) => w.lineId),
+    };
+    if (!ids[body.targetType]!.includes(body.targetId)) {
+      throw new HttpError(400, `No ${body.targetType} "${body.targetId}" in this report`);
+    }
+
+    const fb = await FeedbackModel.findOneAndUpdate(
+      { userId: user.id, runId, targetType: body.targetType, targetId: body.targetId },
+      {
+        $set: {
+          vote: body.vote,
+          comment: body.comment ?? null,
+          promptVersion: report.promptVersion,
+          model: report.model,
+          expiresAt: user.expiresAt,
+        },
+      },
+      { upsert: true, returnDocument: 'after' },
+    );
+    res.status(201).json({ id: fb!.id, vote: fb!.vote });
   });
 
   return r;

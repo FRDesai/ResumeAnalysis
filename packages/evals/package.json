@@ -8,6 +8,7 @@
     "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
+    "@langchain/openai": "1.8.4",
     "@rm/core": "workspace:^",
     "@rm/db": "workspace:^",
     "mongoose": "^9.12.2",

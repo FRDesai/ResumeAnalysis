@@ -18,6 +18,7 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import mongoose from 'mongoose';
 import { loadDataset } from './dataset.js';
+import { createJudge } from './judge.js';
 import { toMarkdown } from './format.js';
 import type { Metrics } from './metrics.js';
 import { runEvals } from './runner.js';
@@ -60,11 +61,15 @@ const meta = {
   models: `${names.parse} / ${names.score}`,
   gitSha: gitSha(),
 };
-console.log(`Running ${cases.length} cases · prompts ${meta.promptVersion} · ${meta.models}\n`);
+const judge = createJudge();
+console.log(
+  `Running ${cases.length} cases · prompts ${meta.promptVersion} · ${meta.models} · judge: ${judge?.model ?? 'none (question relevance n/a)'}\n`,
+);
 
 const result = await runEvals({
   cases,
   models: createModels(),
+  judge,
   concurrency: Number(args.concurrency),
   onCaseDone: (r, done, total) =>
     console.log(

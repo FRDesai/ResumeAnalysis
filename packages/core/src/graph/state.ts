@@ -5,11 +5,13 @@ import type {
   DimensionName,
   DimensionScore,
   Flag,
+  InterviewQuestion,
   ParsedJD,
   ParsedResume,
   Report,
   ReportDimension,
   ReportRequirement,
+  Rewrite,
 } from '../schemas.js';
 
 const replace = <T>(init: T) =>
@@ -44,6 +46,8 @@ export const AnalysisState = Annotation.Root({
 
   /** Token usage per LLM call; concatenated, including from parallel nodes. */
   usage: Annotation<LlmUsage[]>({ reducer: (a, b) => a.concat(b), default: () => [] }),
+  questions: replace<InterviewQuestion[]>([]),
+  rewrites: replace<Rewrite[]>([]),
   report: replace<Report | null>(null),
 });
 

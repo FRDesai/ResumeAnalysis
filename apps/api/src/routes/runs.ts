@@ -78,6 +78,7 @@ export function runsRouter(deps: RunDeps) {
       idemKey,
       promptVersion: PROMPT_VERSION,
       models: { parse: models.parse, score: models.score },
+      expiresAt: user.expiresAt,
     });
     // jobId = runId: BullMQ ignores a duplicate add for the same job.
     await deps.queue.add('analyze', { runId: run.id }, { jobId: run.id });

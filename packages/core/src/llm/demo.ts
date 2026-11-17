@@ -74,6 +74,35 @@ class DemoLlm implements LlmClient {
           }),
         };
       }
+      case 'guardCheck':
+        return { suspicious: [] };
+      case 'generateQuestions': {
+        const gaps = [...user.matchAll(/^(missing|partial), (must|nice), (R\d+): (.+)$/gm)];
+        const claims = [...user.matchAll(/^(L\d+)(?: \(UNVERIFIED\))?: (.+)$/gm)].filter((m) => /\d/.test(m[2]!));
+        const qs: { text: string; target: string; requirementId: string | null; lineId: string | null }[] = [
+          ...gaps.map((g) => ({ text: `The role needs ${g[4]}. What is your hands-on experience with it?`, target: 'gap', requirementId: g[3]!, lineId: null })),
+          ...claims.map((c) => ({ text: `Walk me through this: "${firstWords(c[2]!, 12)}". What was your part?`, target: 'claim', requirementId: null, lineId: c[1]! })),
+        ];
+        while (qs.length < 8) qs.push({ text: 'Describe a technical decision you would make differently today.', target: 'claim', requirementId: null, lineId: null });
+        return {
+          questions: qs.slice(0, 8).map((q) => ({
+            ...q,
+            rubric: { one: 'Vague, no specifics', three: 'Some specifics, unclear own role', five: 'Concrete details, trade-offs and own role' },
+            probes: ['What would you do differently?', 'How did you measure the result?'],
+          })),
+        };
+      }
+      case 'rewriteBullets': {
+        const bullets = resume.filter((l) => /^[-*\u2022]/.test(l.text)).slice(0, 5);
+        return {
+          rewrites: bullets.map((l, i) => {
+            const body = l.text.replace(/^[-*\u2022]\s*/, '').replace(/^(responsible for|worked on|involved in)\s+/i, '');
+            const clean = body.charAt(0).toUpperCase() + body.slice(1);
+            // The first rewrite invents a metric on purpose, so the entity check visibly rejects it.
+            return { lineId: l.id, suggestion: i === 0 ? `${clean}, improving throughput by 30%` : clean, why: 'Lead with the action (demo)' };
+          }),
+        };
+      }
       default:
         throw new Error(`demo model: no answer for ${name}`);
     }

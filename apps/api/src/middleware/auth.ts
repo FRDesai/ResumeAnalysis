@@ -1,10 +1,14 @@
 import type { NextFunction, Request, Response } from 'express';
+import { User } from '@rm/db';
 import jwt from 'jsonwebtoken';
 import { HttpError } from './errors.js';
 
 export interface AuthUser {
   id: string;
-  email: string;
+  /** null for anonymous users. */
+  email: string | null;
+  /** Anonymous users: when their data expires. Everything they create gets this expiresAt. */
+  expiresAt: Date | null;
 }
 
 declare global {
@@ -17,9 +21,11 @@ declare global {
 }
 
 export function signToken(user: AuthUser, secret: string, expiresIn: string): string {
-  return jwt.sign({ email: user.email }, secret, {
+  const anonExp = user.expiresAt?.getTime() ?? null;
+  return jwt.sign({ email: user.email, anonExp }, secret, {
     subject: user.id,
-    expiresIn: expiresIn as jwt.SignOptions['expiresIn'],
+    // An anonymous token never outlives the anonymous data.
+    expiresIn: anonExp ? Math.max(1, Math.floor((anonExp - Date.now()) / 1000)) : (expiresIn as jwt.SignOptions['expiresIn']),
   });
 }
 
@@ -29,7 +35,7 @@ export function signToken(user: AuthUser, secret: string, expiresIn: string): st
  * can't set headers. The query string is stripped from request logs.
  */
 export function requireAuth(secret: string) {
-  return (req: Request, _res: Response, next: NextFunction) => {
+  return async (req: Request, _res: Response, next: NextFunction) => {
     const header = req.headers.authorization ?? '';
     let [scheme, token] = header.split(' ');
     if (!token && req.path.endsWith('/stream') && typeof req.query.access_token === 'string') {
@@ -37,13 +43,21 @@ export function requireAuth(secret: string) {
       token = req.query.access_token;
     }
     if (scheme !== 'Bearer' || !token) throw new HttpError(401, 'Missing bearer token');
+    let payload: jwt.JwtPayload;
     try {
-      const payload = jwt.verify(token, secret) as jwt.JwtPayload;
-      req.user = { id: String(payload.sub), email: String(payload.email) };
-      next();
+      payload = jwt.verify(token, secret) as jwt.JwtPayload;
     } catch {
       throw new HttpError(401, 'Invalid or expired token');
     }
+    // A valid signature is not enough: the account may have been deleted
+    // (delete-my-data) or expired (anonymous TTL).
+    if (!(await User.exists({ _id: payload.sub }))) throw new HttpError(401, 'Account no longer exists');
+    req.user = {
+      id: String(payload.sub),
+      email: typeof payload.email === 'string' ? payload.email : null,
+      expiresAt: typeof payload.anonExp === 'number' ? new Date(payload.anonExp) : null,
+    };
+    next();
   };
 }
 

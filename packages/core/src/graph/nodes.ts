@@ -1,4 +1,3 @@
-import { guardInputs } from './guardNode.js';
 import { renderLines } from '../guard.js';
 import { countTokens, MAX_INPUT_TOKENS } from '../ingest/tokens.js';
 import { InputTooLargeError, EmptyDocumentError } from '../ingest/index.js';
@@ -33,8 +32,6 @@ export const ingest: Node = async (s) => {
   }
   return {};
 };
-
-export const guard: Node = async (s) => ({ flags: guardInputs(s.resumeLines, s.jdLines) });
 
 export const makeNodes = (models: Models) => {
   const parseResume: Node = async (s) => {
@@ -162,8 +159,8 @@ function insufficient(name: DimensionName, reason: string): ReportDimension {
 }
 
 /** Route after verification: loop back while dimensions failed and retries remain. */
-export function afterVerify(s: AnalysisStateType): 'scoreDimensions' | 'assembleReport' {
-  return s.pendingDims.length > 0 && s.scoreAttempts < MAX_SCORE_ATTEMPTS ? 'scoreDimensions' : 'assembleReport';
+export function afterVerify(s: AnalysisStateType): 'scoreDimensions' | 'generateQuestions' {
+  return s.pendingDims.length > 0 && s.scoreAttempts < MAX_SCORE_ATTEMPTS ? 'scoreDimensions' : 'generateQuestions';
 }
 
 /** assembleReport (no LLM): all arithmetic happens here, in code. */
@@ -200,8 +197,8 @@ export const makeAssemble = (models: Models): Node => async (s) => {
       dimensions,
       requirements: s.requirements,
       gaps,
-      questions: [],
-      rewrites: [],
+      questions: s.questions,
+      rewrites: s.rewrites,
       flags: s.flags,
       promptVersion: PROMPT_VERSION,
       model: { parse: models.parse.model, score: models.score.model },

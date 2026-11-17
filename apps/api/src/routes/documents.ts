@@ -55,6 +55,7 @@ export function documentsRouter() {
         lines: prepared.lines,
         tokens: prepared.tokens,
         hash: prepared.hash,
+        expiresAt: user.expiresAt,
       }));
 
     logger.info(

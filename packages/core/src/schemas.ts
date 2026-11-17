@@ -96,6 +96,58 @@ export const ScoreSchema = z.object({
 });
 export type DimensionScore = z.infer<typeof ScoreSchema>['dimensions'][number];
 
+// ---------- generateQuestions ----------
+export const QuestionsSchema = z.object({
+  questions: z.array(
+    z.object({
+      text: z.string().describe('The interview question, asked directly to the candidate'),
+      target: z.enum(['gap', 'claim']).describe('gap = probes a missing/partial requirement; claim = verifies a resume claim'),
+      requirementId: z.string().nullable().describe('For gap questions: the requirement ID (R1...)'),
+      lineId: z.string().nullable().describe('For claim questions: the resume line ID being probed'),
+      rubric: z.object({
+        one: z.string().describe('What a weak (1/5) answer sounds like'),
+        three: z.string().describe('What an adequate (3/5) answer sounds like'),
+        five: z.string().describe('What a strong (5/5) answer sounds like'),
+      }),
+      probes: z.array(z.string()).describe('Exactly 2 follow-up probes'),
+    }),
+  ),
+});
+export type InterviewQuestion = z.infer<typeof QuestionsSchema>['questions'][number] & { id: string };
+
+// ---------- rewriteBullets ----------
+export const RewritesSchema = z.object({
+  rewrites: z.array(
+    z.object({
+      lineId: z.string().describe('The resume line being rewritten'),
+      suggestion: z.string().describe('Improved bullet using ONLY facts already in that line'),
+      why: z.string().describe('One short sentence: what makes the original weak'),
+    }),
+  ),
+});
+
+export interface Rewrite {
+  lineId: string;
+  /** Taken from the resume by code, never from the model. */
+  original: string;
+  suggestion: string;
+  why: string;
+  /** false = rejected by the entity check; the original is kept. */
+  accepted: boolean;
+  /** New numbers/tools/names the rewrite introduced (why it was rejected). */
+  addedEntities: string[];
+}
+
+// ---------- guard (light LLM check) ----------
+export const GuardSchema = z.object({
+  suspicious: z.array(
+    z.object({
+      lineId: z.string().describe('Line ID such as L7 (resume) or J3 (job description)'),
+      reason: z.string(),
+    }),
+  ),
+});
+
 // ---------- report (assembled in code) ----------
 export interface VerifiedEvidence extends Evidence {
   verified: boolean;
@@ -143,9 +195,8 @@ export interface Report {
   dimensions: ReportDimension[];
   requirements: ReportRequirement[];
   gaps: ReportGap[];
-  /** Filled in Phase 4. */
-  questions: unknown[];
-  rewrites: unknown[];
+  questions: InterviewQuestion[];
+  rewrites: Rewrite[];
   flags: Flag[];
   promptVersion: string;
   model: { parse: string; score: string };

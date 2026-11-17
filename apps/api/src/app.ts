@@ -10,6 +10,7 @@ import { errorHandler, HttpError } from './middleware/errors.js';
 import { authRouter } from './routes/auth.js';
 import { documentsRouter } from './routes/documents.js';
 import { evalsRouter } from './routes/evals.js';
+import { meRouter } from './routes/me.js';
 import { reportsRouter } from './routes/reports.js';
 import { runsRouter, type RunDeps } from './routes/runs.js';
 
@@ -61,6 +62,7 @@ export function createApp(config: Config, deps: AppDeps) {
   app.use('/api/documents', documentsRouter());
   app.use('/api/runs', runsRouter({ runsPerHour: 10, ...deps }));
   app.use('/api/reports', reportsRouter());
+  app.use('/api/me', meRouter());
 
   app.use((_req, _res, next) => next(new HttpError(404, 'Not found')));
   app.use(errorHandler);

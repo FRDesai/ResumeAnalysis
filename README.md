@@ -3,7 +3,7 @@
 Resume vs job-description analysis on MERN + LangGraph.js, where every score is backed by a
 quote that code verifies really exists in the resume.
 
-> Status: **Phase 3 of 5** (eval suite + CI gate) complete.
+> Status: **Phase 4 of 5** (questions, rewrites, hardening) complete.
 
 ## Architecture
 
@@ -20,7 +20,8 @@ flowchart LR
   subgraph G[Analysis graph]
     ingest --> guard --> parseResume & parseJD --> matchRequirements --> scoreDimensions --> verifyEvidence
     verifyEvidence -.->|quote not found, max 2 retries| scoreDimensions
-    verifyEvidence --> assembleReport
+    verifyEvidence --> generateQuestions --> assembleReport
+    guard --> rewriteBullets --> assembleReport
   end
 ```
 
@@ -65,6 +66,7 @@ pnpm evals                   # run datasets/v1 with the configured models
 pnpm evals --cases adv-injection,poor-sales
 pnpm evals --save            # also store in MongoDB (served at GET /api/evals/latest)
 pnpm evals --write-baseline  # record current metrics; later runs show deltas vs this
+pnpm evals:feedback          # list recent downvotes: candidates for new golden cases
 ```
 
 | Metric | How it is measured | Threshold |
@@ -77,7 +79,7 @@ pnpm evals --write-baseline  # record current metrics; later runs show deltas vs
 | No banned outputs | No invented facts from the case's banned list | 100% |
 | Latency / cost | p95 end-to-end; mean cost per report | <= 45 s; <= $0.05 |
 
-Rewrite faithfulness and question relevance arrive with Phase 4.
+Question relevance is scored by an LLM judge that is a different model from the scorer (OpenAI if `OPENAI_API_KEY` is set, otherwise Claude Opus); it shows "not measured" in offline mode. Rewrite faithfulness re-checks every rewrite shown to the user for added numbers, tools or names.
 Add cases by copying `packages/evals/datasets/v1/_template.json`.
 
 ## API
@@ -85,10 +87,13 @@ Add cases by copying `packages/evals/datasets/v1/_template.json`.
 | Method | Route | Purpose |
 | --- | --- | --- |
 | POST | `/api/auth/register`, `/api/auth/login` | Returns a JWT |
+| POST | `/api/auth/anonymous` | Try without an account; all data auto-deleted after 7 days |
+| GET / DELETE | `/api/me` | Who am I / delete my data (account, documents, runs, reports, feedback, checkpoints) |
 | POST | `/api/documents` | Resume as multipart `file` (PDF/DOCX, 5 MB) or JD as `{kind:"jd", text}`; returns `documentId` and line-numbered text |
 | POST | `/api/runs` | `{resumeId, jdId}` → queues an analysis (idempotent; 10/hour/user) |
 | GET | `/api/runs/:id` | Status, tokens, cost, latency |
 | GET | `/api/runs/:id/stream` | SSE progress (`parseResume:done`, `verifyEvidence:retry`, `run:done`…) |
 | GET | `/api/reports/:runId` | Full report |
 | GET | `/api/reports` | Report history (paginated) |
+| POST | `/api/reports/:runId/feedback` | Thumbs up/down on a score, question, requirement or rewrite |
 | GET | `/api/evals/latest` | Public: latest eval metrics and trend |

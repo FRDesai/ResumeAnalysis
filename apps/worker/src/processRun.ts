@@ -29,7 +29,11 @@ export function isPermanent(err: unknown): boolean {
  */
 export async function processRun(runId: string, deps: { graph: AnalysisGraph; publish: Publish }) {
   const run = await Run.findById(runId);
-  if (!run) throw new Error(`Run ${runId} not found`);
+  // Deleted (delete-my-data, or expired) while queued: nothing to do.
+  if (!run) {
+    logger.info({ runId }, 'run no longer exists; skipping');
+    return;
+  }
   if (run.status === 'done') return;
 
   let seq = run.events.reduce((m, e) => Math.max(m, e.seq ?? 0), 0);
@@ -70,7 +74,7 @@ export async function processRun(runId: string, deps: { graph: AnalysisGraph; pu
 
   await ReportModel.updateOne(
     { runId },
-    { $set: { ...report, runId, userId: run.userId } },
+    { $set: { ...report, runId, userId: run.userId, expiresAt: run.expiresAt ?? null } },
     { upsert: true },
   );
   await Run.updateOne(

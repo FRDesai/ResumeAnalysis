@@ -65,8 +65,9 @@ describe('processRun', () => {
     await processRun(run.id, { graph, publish: async (_id, e) => void published.push(e) });
 
     const done = await Run.findById(run.id).lean();
-    expect(done).toMatchObject({ status: 'done', tokens: { input: 400, output: 200 } });
-    expect(done!.costUsd).toBeCloseTo(0.004);
+    // 7 LLM calls: guardCheck, parseResume, parseJD, matchRequirements, scoreDimensions, rewriteBullets, generateQuestions
+    expect(done).toMatchObject({ status: 'done', tokens: { input: 700, output: 350 } });
+    expect(done!.costUsd).toBeCloseTo(0.007);
     expect(done!.latencyMs).toBeGreaterThanOrEqual(0);
 
     const report = await ReportModel.findOne({ runId: run.id }).lean();
@@ -93,8 +94,9 @@ describe('processRun', () => {
     await processRun(run.id, { graph, publish: async (_id, e) => void events.push(e) });
 
     expect(events[0]).toMatchObject({ type: 'run:resumed', data: { from: ['matchRequirements'] } });
-    // parseResume and parseJD ran exactly once in total: their results came from the checkpoint.
-    expect(models.parse.calls.map((c) => c.name).sort()).toEqual(['parseJD', 'parseResume']);
+    // guard and both parse steps ran exactly once in total: their results came from the checkpoint.
+    expect(models.parse.calls.map((c) => c.name).sort()).toEqual(['guardCheck', 'parseJD', 'parseResume']);
+    expect(models.score.calls.filter((c) => c.name === 'rewriteBullets')).toHaveLength(1); // parallel branch not repeated
     expect((await Run.findById(run.id))!.status).toBe('done');
     // Sequence numbers continue after the first attempt's events, so SSE clients don't drop them.
     expect(events[0]!.seq).toBeGreaterThan(1);
