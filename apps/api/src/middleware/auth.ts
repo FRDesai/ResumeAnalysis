@@ -23,11 +23,19 @@ export function signToken(user: AuthUser, secret: string, expiresIn: string): st
   });
 }
 
-/** Require a valid "Authorization: Bearer <jwt>" header. */
+/**
+ * Require a valid "Authorization: Bearer <jwt>" header. SSE routes (path ending in
+ * /stream) may pass ?access_token= instead, because the browser EventSource API
+ * can't set headers. The query string is stripped from request logs.
+ */
 export function requireAuth(secret: string) {
   return (req: Request, _res: Response, next: NextFunction) => {
     const header = req.headers.authorization ?? '';
-    const [scheme, token] = header.split(' ');
+    let [scheme, token] = header.split(' ');
+    if (!token && req.path.endsWith('/stream') && typeof req.query.access_token === 'string') {
+      scheme = 'Bearer';
+      token = req.query.access_token;
+    }
     if (scheme !== 'Bearer' || !token) throw new HttpError(401, 'Missing bearer token');
     try {
       const payload = jwt.verify(token, secret) as jwt.JwtPayload;

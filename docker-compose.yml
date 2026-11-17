@@ -26,5 +26,16 @@ services:
       mongo: { condition: service_healthy }
       redis: { condition: service_healthy }
 
+  worker:
+    build: { context: ., args: { APP: worker } }
+    env_file: [{ path: .env, required: false }]
+    environment:
+      MONGO_URI: mongodb://mongo:27017/resumematch
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      mongo: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    restart: unless-stopped
+
 volumes:
   mongo-data:

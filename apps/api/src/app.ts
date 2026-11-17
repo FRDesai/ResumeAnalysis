@@ -9,8 +9,12 @@ import { requireAuth } from './middleware/auth.js';
 import { errorHandler, HttpError } from './middleware/errors.js';
 import { authRouter } from './routes/auth.js';
 import { documentsRouter } from './routes/documents.js';
+import { reportsRouter } from './routes/reports.js';
+import { runsRouter, type RunDeps } from './routes/runs.js';
 
-export function createApp(config: Config) {
+export type AppDeps = Omit<RunDeps, 'runsPerHour'> & { runsPerHour?: number };
+
+export function createApp(config: Config, deps: AppDeps) {
   const app = express();
   const isTest = config.NODE_ENV === 'test';
 
@@ -31,12 +35,12 @@ export function createApp(config: Config) {
     pinoHttp({
       logger,
       autoLogging: !isTest,
-      // Keep request logs to method/url/status: no headers or bodies (privacy + noise).
+      // Method, path (query string dropped: it can carry the SSE token) and status only.
       serializers: {
         req: (req: { id: unknown; method: string; url: string }) => ({
           id: req.id,
           method: req.method,
-          url: req.url,
+          url: req.url.split('?')[0],
         }),
         res: (res: { statusCode: number }) => ({ statusCode: res.statusCode }),
       },
@@ -53,6 +57,8 @@ export function createApp(config: Config) {
   app.use('/api/auth', authLimiter, authRouter(config));
   app.use('/api', apiLimiter, requireAuth(config.JWT_SECRET));
   app.use('/api/documents', documentsRouter());
+  app.use('/api/runs', runsRouter({ runsPerHour: 10, ...deps }));
+  app.use('/api/reports', reportsRouter());
 
   app.use((_req, _res, next) => next(new HttpError(404, 'Not found')));
   app.use(errorHandler);

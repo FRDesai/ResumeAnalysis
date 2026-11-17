@@ -1,0 +1,27 @@
+{
+  "name": "@rm/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=../../.env src/worker.ts",
+    "start": "tsx src/worker.ts",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@langchain/core": "1.4.1",
+    "@langchain/langgraph": "1.7.5",
+    "@langchain/langgraph-checkpoint-mongodb": "1.5.2",
+    "@rm/core": "workspace:^",
+    "@rm/db": "workspace:^",
+    "bullmq": "^6.7.7",
+    "ioredis": "^6.0.0",
+    "mongodb": "^6.21.0",
+    "mongoose": "^9.12.2",
+    "pino": "^10.4.0",
+    "tsx": "^4.23.15"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^11.3.0"
+  }
+}

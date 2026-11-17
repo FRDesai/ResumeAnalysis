@@ -4,7 +4,7 @@ import { z } from 'zod';
 import type { Config } from '../config.js';
 import { HttpError } from '../middleware/errors.js';
 import { signToken } from '../middleware/auth.js';
-import { User } from '../models/User.js';
+import { User } from '@rm/db';
 
 const Credentials = z.object({
   email: z.email().max(254),

@@ -4,7 +4,7 @@ import multer from 'multer';
 import { z } from 'zod';
 import { currentUser } from '../middleware/auth.js';
 import { HttpError } from '../middleware/errors.js';
-import { DocumentModel } from '../models/Document.js';
+import { DocumentModel } from '@rm/db';
 import { logger } from '../logger.js';
 
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
